@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 #ifdef __MACH__
 #include <machine/endian.h>
@@ -15,87 +16,126 @@
 #define OFFSET_PERIOD 			16
 #define OFFSET_CHANNELS_DATA	28
 
+void print_usage()
+{
+
+}
+
 int main(int argc, char *argv[])
 {
-	int fd = open(argv[1], O_RDONLY, 0);
-	
-	if(fd == -1) {
-		perror("Cannnot open ROF file");
-		exit(EXIT_FAILURE);
-	}
+    // Prevent getopt() from writing to stderr
+    opterr = 0;
 
-	ssize_t bytes_read;
+    int c;
+    bool output_csv;
 
-	// Read the first 3 bytes and make sure we're reading an ROF file
-	char magic[4];
-	bytes_read = read(fd, &magic, sizeof(magic));
+    while((c = getopt(argc, argv, "c")) != EOF) {
+        switch(c) {
+            case 'c':
+                output_csv = true;
+                break;
 
-    printf("magic: %s\n %i", magic, strcmp(magic, "ROF"));
+            case '?':
+                printf("unrecognized option: -%c\n\n", optopt);   
+                print_usage();
+                exit(EXIT_FAILURE);
+        }    
+    }
 
-	if(strcmp(magic, "ROF") != 0) {
-		printf("Error, not an ROF file!\n");
-		exit(EXIT_FAILURE);
-	}
+    int fd = open(argv[optind], O_RDONLY, 0);
 
-	// Try and seek to byte offset for period 
-	off_t pos = lseek(fd, OFFSET_PERIOD, SEEK_SET);
+    if(fd == -1) {
+        perror("Cannnot open ROF file");
+        exit(EXIT_FAILURE);
+    }
 
-	if(pos == -1) {
-		perror("Cannnot seek ROF file");
-		exit(EXIT_FAILURE);
-	}
+    ssize_t bytes_read;
 
-	// Read the period 
-	uint32_t period;
-	bytes_read = read(fd, &period, sizeof(period));
+    // Read the first 3 bytes and make sure we're reading an ROF file
+    char magic[4];
+    bytes_read = read(fd, &magic, sizeof(magic));
 
-	if(bytes_read != sizeof(period)) {
-		printf("Could not read period from ROF file\n");
-		exit(EXIT_FAILURE);
-	}
+    if(strcmp(magic, "ROF") != 0) {
+        printf("Error, not an ROF file!\n");
+        exit(EXIT_FAILURE);
+    }
 
-	printf("\nPeriod: %i second(s)\n", period);
+    // Try and seek to byte offset for period 
+    off_t pos = lseek(fd, OFFSET_PERIOD, SEEK_SET);
 
-	// Read the number of data points
-	uint32_t points;
-	bytes_read = read(fd, &points, sizeof(points));
+    if(pos == -1) {
+        perror("Cannnot seek ROF file");
+        exit(EXIT_FAILURE);
+    }
 
-	printf("Data points: %i\n", points);	
-	
-	// Determine the number of channels in the data section
-	pos = lseek(fd, 0, SEEK_END);
-	int num_channels = (pos - OFFSET_CHANNELS_DATA) / points / 8;
+    // Read the period 
+    uint32_t period;
+    bytes_read = read(fd, &period, sizeof(period));
 
-	printf("Number of channels: %i\n\n", num_channels);
+    if(bytes_read != sizeof(period)) {
+        printf("Could not read period from ROF file\n");
+        exit(EXIT_FAILURE);
+    }
 
-	// Read the data for each channel at each point
-	pos = lseek(fd, OFFSET_CHANNELS_DATA, SEEK_SET);
+    // Read the number of data points
+    uint32_t points;
+    bytes_read = read(fd, &points, sizeof(points));
 
-	int point = 0;
+    // Determine the number of channels in the data section
+    pos = lseek(fd, 0, SEEK_END);
+    int num_channels = (pos - OFFSET_CHANNELS_DATA) / points / 8;
 
-	do {
+    if(output_csv) {
+        printf("Seconds");
+        for(int i = 1; i <= num_channels; i++) {
+            printf(",CH%i Voltage,CH%i Current", i, i);
+        }
+        printf("\n");
+    }
+    else {
+        printf("Data points: %i\n", points);	
+        printf("Period: %i second(s)\n", period);
+        printf("Number of channels: %i\n\n", num_channels);
+    }
 
-		printf("%i:\t", point);
+    // Read the data for each channel at each point
+    pos = lseek(fd, OFFSET_CHANNELS_DATA, SEEK_SET);
 
-		for(int channel = 0; channel < num_channels; channel++) {
-			uint32_t voltage, current;
-	
-			// Read the recorded voltage
-			bytes_read = read(fd, &voltage, sizeof(voltage));
+    int point = 0;
 
-			// Read the recorded current
-			bytes_read = read(fd, &current, sizeof(current));
+    do {
 
-			printf("%f(V), %f(A)\t", (float)voltage / 10000, (float)current / 10000);
-		}
-	
-		printf("\n");
-		point++;
+        if(output_csv) {
+            printf("%i", point);
+        }
+        else {
+            printf("%i:\t", point);
+        }
 
-	} while(bytes_read != 0);	
- 	
-	close(fd);
+        for(int channel = 0; channel < num_channels; channel++) {
+            uint32_t voltage, current;
 
-	exit(EXIT_SUCCESS);
+            // Read the recorded voltage
+            bytes_read = read(fd, &voltage, sizeof(voltage));
+
+            // Read the recorded current
+            bytes_read = read(fd, &current, sizeof(current));
+
+            if(output_csv) {
+                printf(",%f,%f", (float)voltage / 10000, (float)current / 10000);
+            }
+            else {
+                printf("%f(V), %f(A)\t", (float)voltage / 10000, (float)current / 10000);
+            }
+        }
+
+        printf("\n");
+        point++;
+
+    } while(bytes_read != 0);	
+
+    close(fd);
+
+    exit(EXIT_SUCCESS);
 }
 
