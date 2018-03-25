@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <endian.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+
+#ifdef __MACH__
+#include <machine/endian.h>
+#else
+#include <endian.h>
+#endif
 
 #define OFFSET_PERIOD 			16
 #define OFFSET_CHANNELS_DATA	28
@@ -22,8 +27,10 @@ int main(int argc, char *argv[])
 	ssize_t bytes_read;
 
 	// Read the first 3 bytes and make sure we're reading an ROF file
-	char magic[3];
+	char magic[4];
 	bytes_read = read(fd, &magic, sizeof(magic));
+
+    printf("magic: %s\n %i", magic, strcmp(magic, "ROF"));
 
 	if(strcmp(magic, "ROF") != 0) {
 		printf("Error, not an ROF file!\n");
