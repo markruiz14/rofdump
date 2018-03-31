@@ -1,5 +1,11 @@
-all:
-	gcc rofdump.c -o rofdump
+CFLAGS=-Wall
+CC=gcc
 
-debug:
-	gcc -g rofdump.c -o rofdump
+rofdump: rofdump.c 
+	$(CC) $< -o $@ $(CFLAGS) 
+
+clean:
+	rm rofdump
+
+debug: rofdump.c 
+	$(CC) $< -o rofdump $(CFLAGS) -g
