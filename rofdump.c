@@ -1,3 +1,15 @@
+/*
+ * rofdump
+ *
+ * Utility program for reading ROF binary files from Rigol 8xx series lab
+ * power supplies. 
+ *
+ * Copyright 2017 Mark Ruiz (mark@markruiz.com)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the standard MIT license.  See COPYING for more details.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
