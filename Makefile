@@ -1,8 +1,6 @@
 CFLAGS=-Wall
-CC=gcc
 
-rofdump: rofdump.c 
-	$(CC) $< -o $@ $(CFLAGS) 
+rofdump: 
 
 clean:
 	rm rofdump
