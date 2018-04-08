@@ -25,27 +25,27 @@
 #include <endian.h>
 #endif
 
-#define VERSION					"1.0"
-#define OFFSET_PERIOD 			16
-#define OFFSET_CHANNELS_DATA	28
+#define VERSION                 "1.0"
+#define OFFSET_PERIOD           16
+#define OFFSET_CHANNELS_DATA    28
 
 void print_usage(int error)
 {
-	FILE *output = error ? stderr : stdout;
-	fprintf(output, "ROFDUMP %s: A utility for reading ROF files produced by Rigol 8xx " 
-			"lab power supplies - Mark Ruiz (mark@markruiz.com)\n", VERSION);
-	fprintf(output, "usage: rofdump [-h] [-c] filename\n");
-	fprintf(output, "options:\n");
-	fprintf(output, "\t-h\tprint usage\n");
-	fprintf(output, "\t-c\toutput CSV\n");
+    FILE *output = error ? stderr : stdout;
+    fprintf(output, "ROFDUMP %s: A utility for reading ROF files produced by Rigol 8xx " 
+            "lab power supplies - Mark Ruiz (mark@markruiz.com)\n", VERSION);
+    fprintf(output, "usage: rofdump [-h] [-c] filename\n");
+    fprintf(output, "options:\n");
+    fprintf(output, "\t-h\tprint usage\n");
+    fprintf(output, "\t-c\toutput CSV\n");
 }
 
 int main(int argc, char *argv[])
 {
-	if(argc < 2) {
-		print_usage(1);
-		exit(EXIT_FAILURE);
-	}
+    if(argc < 2) {
+        print_usage(1);
+        exit(EXIT_FAILURE);
+    }
 
     // Prevent getopt() from writing to stderr
     opterr = 0;
@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
                 output_csv = true;
                 break;
 
-			case 'h':
-				print_usage(0);
-				exit(EXIT_SUCCESS);
+            case 'h':
+                print_usage(0);
+                exit(EXIT_SUCCESS);
 
             case '?':
                 printf("rofdump: invalid option '-%c'\n", optopt);   
@@ -107,18 +107,18 @@ int main(int argc, char *argv[])
     uint32_t points;
     bytes_read = read(fd, &points, sizeof(points));
 
-	if(bytes_read != sizeof(points)) {
-		printf("Could not read number of data points from ROF file\n");
-		exit(EXIT_FAILURE);
-	}
+    if(bytes_read != sizeof(points)) {
+        printf("Could not read number of data points from ROF file\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Determine the number of channels in the data section
     pos = lseek(fd, 0, SEEK_END);
 
-	if(pos == -1) {
-		perror("Could not determine number of channels in ROF file\n");
-		exit(EXIT_FAILURE);
-	}
+    if(pos == -1) {
+        perror("Could not determine number of channels in ROF file\n");
+        exit(EXIT_FAILURE);
+    }
 
     int num_channels = (pos - OFFSET_CHANNELS_DATA) / points / 8;
 
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         printf("\n");
     }
     else {
-        printf("Data points: %i\n", points);	
+        printf("Data points: %i\n", points);    
         printf("Period: %i second(s)\n", period);
         printf("Number of channels: %i\n\n", num_channels);
     }
@@ -138,18 +138,18 @@ int main(int argc, char *argv[])
     // Read the data for each channel at each point
     pos = lseek(fd, OFFSET_CHANNELS_DATA, SEEK_SET);
 
-	if(pos == -1) {
-		perror("Could not seek to data section of ROF file\n");
-		exit(EXIT_FAILURE);
-	}
+    if(pos == -1) {
+        perror("Could not seek to data section of ROF file\n");
+        exit(EXIT_FAILURE);
+    }
 
     int seconds = 0;
-	off_t end = lseek(fd, 0, SEEK_END);
-	lseek(fd, pos, SEEK_SET);
+    off_t end = lseek(fd, 0, SEEK_END);
+    lseek(fd, pos, SEEK_SET);
 
     while(lseek(fd, 0, SEEK_CUR) != end) {
         if(output_csv) {
-       		printf("%i", seconds);
+            printf("%i", seconds);
         }
         else {
             printf("%i:\t", seconds);
@@ -160,25 +160,25 @@ int main(int argc, char *argv[])
 
             // Read the recorded voltage
             bytes_read = read(fd, &value, sizeof(value));
-			
-			if(bytes_read != sizeof(value)) {
-				fprintf(stderr, "Failed to read voltage value at %i seconds", seconds);
-				exit(EXIT_FAILURE);
-			}
-			
-			float voltage = (float)value / 10000;
+            
+            if(bytes_read != sizeof(value)) {
+                fprintf(stderr, "Failed to read voltage value at %i seconds", seconds);
+                exit(EXIT_FAILURE);
+            }
+            
+            float voltage = (float)value / 10000;
 
             // Read the recorded current
             bytes_read = read(fd, &value, sizeof(value));
-			
-			if(bytes_read != sizeof(value)) {
-				fprintf(stderr, "Failed to read current value at %i seconds", seconds);
-				exit(EXIT_FAILURE);
-			}
-			
-			float current = (float)value / 10000;
+            
+            if(bytes_read != sizeof(value)) {
+                fprintf(stderr, "Failed to read current value at %i seconds", seconds);
+                exit(EXIT_FAILURE);
+            }
+            
+            float current = (float)value / 10000;
 
-			if(output_csv) {
+            if(output_csv) {
                 printf(",%f,%f", voltage, current);
             }
             else {
