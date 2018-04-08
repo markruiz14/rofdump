@@ -61,11 +61,9 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    ssize_t bytes_read;
-
-    // Read the first 3 bytes and make sure we're reading an ROF file
+    // Read the first 4 bytes and make sure we're reading an ROF file
     char magic[4];
-    bytes_read = read(fd, &magic, sizeof(magic));
+    ssize_t bytes_read = read(fd, &magic, sizeof(magic));
 
     if(strcmp(magic, "ROF") != 0) {
         printf("Error, not an ROF file!\n");
@@ -93,8 +91,19 @@ int main(int argc, char *argv[])
     uint32_t points;
     bytes_read = read(fd, &points, sizeof(points));
 
+	if(bytes_read != sizeof(points)) {
+		printf("Could not read number of data points from ROF file\n");
+		exit(EXIT_FAILURE);
+	}
+
     // Determine the number of channels in the data section
     pos = lseek(fd, 0, SEEK_END);
+
+	if(pos == -1) {
+		perror("Could not determine number of channels in ROF file\n");
+		exit(EXIT_FAILURE);
+	}
+
     int num_channels = (pos - OFFSET_CHANNELS_DATA) / points / 8;
 
     if(output_csv) {
@@ -112,6 +121,11 @@ int main(int argc, char *argv[])
 
     // Read the data for each channel at each point
     pos = lseek(fd, OFFSET_CHANNELS_DATA, SEEK_SET);
+
+	if(pos == -1) {
+		perror("Could not seek to data section of ROF file\n");
+		exit(EXIT_FAILURE);
+	}
 
     int point = 0;
 
@@ -142,7 +156,7 @@ int main(int argc, char *argv[])
         }
 
         printf("\n");
-        point++;
+        point += period;
 
     } while(bytes_read != 0);	
 
