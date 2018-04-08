@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     int fd = open(argv[optind], O_RDONLY, 0);
 
     if(fd == -1) {
-        perror("Cannnot open ROF file");
+        perror("Cannnot open specified file");
         exit(EXIT_FAILURE);
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     ssize_t bytes_read = read(fd, &magic, sizeof(magic));
 
     if(strcmp(magic, "ROF") != 0) {
-        printf("Error, not an ROF file!\n");
+        printf("Specified file is not a valid ROF file\n");
         exit(EXIT_FAILURE);
     }
 
@@ -143,38 +143,52 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-    int point = 0;
+    int seconds = 0;
+	off_t end = lseek(fd, 0, SEEK_END);
+	lseek(fd, pos, SEEK_SET);
 
-    do {
-
+    while(lseek(fd, 0, SEEK_CUR) != end) {
         if(output_csv) {
-            printf("%i", point);
+       		printf("%i", seconds);
         }
         else {
-            printf("%i:\t", point);
+            printf("%i:\t", seconds);
         }
 
         for(int channel = 0; channel < num_channels; channel++) {
-            uint32_t voltage, current;
+            uint32_t value;
 
             // Read the recorded voltage
-            bytes_read = read(fd, &voltage, sizeof(voltage));
+            bytes_read = read(fd, &value, sizeof(value));
+			
+			if(bytes_read != sizeof(value)) {
+				fprintf(stderr, "Failed to read voltage value at %i seconds", seconds);
+				exit(EXIT_FAILURE);
+			}
+			
+			float voltage = (float)value / 10000;
 
             // Read the recorded current
-            bytes_read = read(fd, &current, sizeof(current));
+            bytes_read = read(fd, &value, sizeof(value));
+			
+			if(bytes_read != sizeof(value)) {
+				fprintf(stderr, "Failed to read current value at %i seconds", seconds);
+				exit(EXIT_FAILURE);
+			}
+			
+			float current = (float)value / 10000;
 
-            if(output_csv) {
-                printf(",%f,%f", (float)voltage / 10000, (float)current / 10000);
+			if(output_csv) {
+                printf(",%f,%f", voltage, current);
             }
             else {
-                printf("%f(V), %f(A)\t", (float)voltage / 10000, (float)current / 10000);
+                printf("%f(V), %f(A)\t", voltage, current);
             }
         }
 
         printf("\n");
-        point += period;
-
-    } while(bytes_read != 0);	
+        seconds += period;
+    } 
 
     close(fd);
 
