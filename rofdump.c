@@ -4,7 +4,7 @@
  * Utility program for reading ROF binary files from Rigol 8xx series lab
  * power supplies. 
  *
- * Copyright 2017 Mark Ruiz (mark@markruiz.com)
+ * Copyright (C) 2017 Mark Ruiz (mark@markruiz.com)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the standard MIT license.  See COPYING for more details.
@@ -25,31 +25,47 @@
 #include <endian.h>
 #endif
 
+#define VERSION					"1.0"
 #define OFFSET_PERIOD 			16
 #define OFFSET_CHANNELS_DATA	28
 
-void print_usage()
+void print_usage(int error)
 {
-
+	FILE *output = error ? stderr : stdout;
+	fprintf(output, "ROFDUMP %s: A utility for reading ROF files produced by Rigol 8xx " 
+			"lab power supplies - Mark Ruiz (mark@markruiz.com)\n", VERSION);
+	fprintf(output, "usage: rofdump [-h] [-c] filename\n");
+	fprintf(output, "options:\n");
+	fprintf(output, "\t-h\tprint usage\n");
+	fprintf(output, "\t-c\toutput CSV\n");
 }
 
 int main(int argc, char *argv[])
 {
+	if(argc < 2) {
+		print_usage(1);
+		exit(EXIT_FAILURE);
+	}
+
     // Prevent getopt() from writing to stderr
     opterr = 0;
 
-    int c;
+    int ch;
     bool output_csv;
 
-    while((c = getopt(argc, argv, "c")) != EOF) {
-        switch(c) {
+    while((ch = getopt(argc, argv, "ch")) != EOF) {
+        switch(ch) {
             case 'c':
                 output_csv = true;
                 break;
 
+			case 'h':
+				print_usage(0);
+				exit(EXIT_SUCCESS);
+
             case '?':
-                printf("unrecognized option: -%c\n\n", optopt);   
-                print_usage();
+                printf("rofdump: invalid option '-%c'\n", optopt);   
+                print_usage(1);
                 exit(EXIT_FAILURE);
         }    
     }
