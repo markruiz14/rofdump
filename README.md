@@ -12,7 +12,7 @@ By default, recorded values are printed to the console. The columns are organize
 
 Use the handy `-c` option to output to CSV. Use this option in conjunction with GNUPlot to generate pretty graphs. [Examples below](#using-with-gnuplot).
 
-##### Example output
+## Usage Examples
 ```
 $ ./rofdump data.ROF
 Data points: 318
@@ -27,9 +27,8 @@ Number of channels: 3
 ...
 ```
 
-
-##### Example CSV output
 ```
+# Output CSV
 $ ./rofdump -c data.ROF 
 Seconds,CH1 Voltage,CH1 Current,CH2 Voltage,CH2 Current,CH3 Voltage,CH3 Current
 1,11.992100,0.015700,4.998700,0.736800,5.000800,0.156000
