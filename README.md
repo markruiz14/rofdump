@@ -53,7 +53,7 @@ Use the `-c` option to output a csv file, which you can then easily use with GNU
 In the examples below, the ROF file is from a DP832 (3 channels).
 
 #### Plot all data for CH1, CH2, and CH3
-![ch1-ch2-ch3-voltage-current.svg](https://s3.amazonaws.com/static.markruiz.com/rofdump/ch1-ch2-ch3-voltage-current.svg)
+![ch1-ch2-ch3-voltage-current.svg](http://markruiz.com/wp-content/uploads/2018/03/rofdump-currentvoltage-800.svg)
 
 ```
 $ ./rofdump -c data.ROF > data.csv && \ 
@@ -63,11 +63,11 @@ set title 'CH1, CH2, CH3 Voltage and Current'; \
 set xlabel 'Time (s)'; \
 set offset 0, 0, 6, 0; \
 set datafile separator comma; \
-plot for [i=2:7] 'data.csv' using 0:i with lines title columnhead"
+plot for [i=2:7] 'data.csv' using 0:i with lines title columnhead
 ```
 ---
 #### Plot current for CH1, CH2, and CH3
-![ch1-ch2-ch3-current.svg](https://s3.amazonaws.com/static.markruiz.com/rofdump/ch1-ch2-ch3-current.svg)
+![ch1-ch2-ch3-current.svg](http://markruiz.com/wp-content/uploads/2018/03/rofdump-current-800.svg)
 
 ```
 $ ./rofdump -c data.ROF > data.csv && \ 
@@ -77,7 +77,7 @@ set title 'CH1, CH2, CH3 Current'; \
 set xlabel 'Time (s)'; \
 set ylabel 'Current (A)'; \
 set datafile separator comma; \
-plot for [i=3:7:2] 'data.csv' using 0:i with lines title columnhead"
+plot for [i=3:7:2] 'data.csv' using 0:i with lines title columnhead
 ```
 
 
